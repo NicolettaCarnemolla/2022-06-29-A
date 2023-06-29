@@ -7,7 +7,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 import it.polito.tdp.itunes.model.Album;
+import it.polito.tdp.itunes.model.Arco;
 import it.polito.tdp.itunes.model.Artist;
 import it.polito.tdp.itunes.model.Genre;
 import it.polito.tdp.itunes.model.MediaType;
@@ -26,7 +29,7 @@ public class ItunesDAO {
 			ResultSet res = st.executeQuery();
 
 			while (res.next()) {
-				result.add(new Album(res.getInt("AlbumId"), res.getString("Title")));
+				//result.add(new Album(res.getInt("AlbumId"), res.getString("Title")));
 			}
 			conn.close();
 		} catch (SQLException e) {
@@ -130,6 +133,68 @@ public class ItunesDAO {
 
 			while (res.next()) {
 				result.add(new MediaType(res.getInt("MediaTypeId"), res.getString("Name")));
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return result;
+	}
+	
+	
+	/**
+	 * Primo punto creazione grafo; ottengo i vertici
+	 * 
+	 */
+	/*"SELECT a.*, COUNT(t.TrackId) AS tot_tracce "
+	+ "FROM track t, album a "
+	+ "WHERE t.AlbumId=a.AlbumId "
+	+ "GROUP BY t.AlbumId "
+	+ "HAVING tot_tracce > ?"*/
+	public List<Album> getAllAlbumswithCondition(int N){
+		final String sql = "SELECT a.AlbumId, a.Title, COUNT(*) AS tot_tracce "
+				+ "FROM album a, track t "
+				+ "WHERE a.AlbumId = t.AlbumId "
+				+ "GROUP BY a.AlbumId, a.Title "
+				+ "HAVING tot_tracce > ?"
+				;
+		List<Album> result = new LinkedList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, N);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				result.add(new Album(res.getInt("AlbumId"), res.getString("Title"),res.getInt("tot_tracce")));
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return result;
+	}
+	
+	public List<Arco> getAllArchiswithCondition(int N){
+		final String sql = "SELECT a.*, COUNT(t.TrackId) AS tot_tracce "
+				+ "FROM track t, album a "
+				+ "WHERE t.AlbumId=a.AlbumId "
+				+ "GROUP BY t.AlbumId "
+				+ "HAVING tot_tracce > ?";
+		List<Arco> result = new LinkedList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, N);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				//Album a = new Album(res.getInt("AlbumId"), res.getString("Title"));
+				//result.add(new Arco(a,res.getInt("tot_tracce")));
 			}
 			conn.close();
 		} catch (SQLException e) {
